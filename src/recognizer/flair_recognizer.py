@@ -84,7 +84,7 @@ class FlairRecognizer(EntityRecognizer):
     ]
 
     MODEL_LANGUAGES = {
-        "en":"beki/flair-pii-distilbert",
+        "en": "beki/flair-pii-distilbert",
         # "en":"flair-trf.pt",
     }
 
@@ -220,5 +220,3 @@ class FlairRecognizer(EntityRecognizer):
         return any(
             [entity in egrp and label in lgrp for egrp, lgrp in check_label_groups]
         )
-
-

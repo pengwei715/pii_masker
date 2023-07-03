@@ -15,8 +15,9 @@ import json
 import warnings
 import streamlit as st
 import os
+
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 # Helper methods
 @st.cache_resource()
@@ -73,17 +74,17 @@ def annotate(text, st_analyze_results, st_entities):
     results = sorted(st_analyze_results, key=lambda x: x.start)
     for i, res in enumerate(results):
         if i == 0:
-            tokens.append(text[:res.start])
+            tokens.append(text[: res.start])
 
         # append entity text and entity type
-        tokens.append((text[res.start: res.end], res.entity_type))
+        tokens.append((text[res.start : res.end], res.entity_type))
 
         # if another entity coming i.e. we're not at the last results element, add text up to next entity
         if i != len(results) - 1:
-            tokens.append(text[res.end:results[i+1].start])
+            tokens.append(text[res.end : results[i + 1].start])
         # if no more entities coming, add all remaining text
         else:
-            tokens.append(text[res.end:])
+            tokens.append(text[res.end :])
     return tokens
 
 
@@ -107,8 +108,7 @@ st_threshold = st.sidebar.slider(
     label="Acceptance threshold", min_value=0.0, max_value=1.0, value=0.35
 )
 
-st_return_decision_process = st.sidebar.checkbox(
-    "Add analysis explanations in json")
+st_return_decision_process = st.sidebar.checkbox("Add analysis explanations in json")
 
 st.sidebar.info(
     "Privy is an open source framework for synthetic data generation in protocol trace formats (json, sql, html etc). Presidio is an open source framework for PII detection and anonymization. "
@@ -118,7 +118,8 @@ st.sidebar.info(
 
 # Main panel
 analyzer_load_state = st.info(
-    "Starting Presidio analyzer and loading Privy-trained PII model...")
+    "Starting Presidio analyzer and loading Privy-trained PII model..."
+)
 engine = analyzer_engine()
 analyzer_load_state.empty()
 
@@ -133,8 +134,8 @@ st_text = st.text_area(
 
 button = st.button("Detect PII")
 
-if 'first_load' not in st.session_state:
-    st.session_state['first_load'] = True
+if "first_load" not in st.session_state:
+    st.session_state["first_load"] = True
 
 # After
 st.subheader("Analyzed")
@@ -166,7 +167,7 @@ st.subheader("Detailed Findings")
 if st_analyze_results:
     res_dicts = [r.to_dict() for r in st_analyze_results]
     for d in res_dicts:
-        d['Value'] = st_text[d['start']:d['end']]
+        d["Value"] = st_text[d["start"] : d["end"]]
     df = pd.DataFrame.from_records(res_dicts)
     df = df[["entity_type", "Value", "score", "start", "end"]].rename(
         {
@@ -182,7 +183,7 @@ if st_analyze_results:
 else:
     st.text("No findings")
 
-st.session_state['first_load'] = True
+st.session_state["first_load"] = True
 
 # json result
 

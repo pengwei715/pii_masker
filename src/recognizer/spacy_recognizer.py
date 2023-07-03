@@ -11,6 +11,7 @@ from presidio_analyzer.predefined_recognizers.spacy_recognizer import SpacyRecog
 
 logger = logging.getLogger("presidio-analyzer")
 
+
 class CustomSpacyRecognizer(LocalRecognizer):
 
     ENTITIES = [
@@ -21,7 +22,9 @@ class CustomSpacyRecognizer(LocalRecognizer):
         "DATE_TIME",
     ]
 
-    DEFAULT_EXPLANATION = "Identified as {} by Spacy's Named Entity Recognition (Privy-trained)"
+    DEFAULT_EXPLANATION = (
+        "Identified as {} by Spacy's Named Entity Recognition (Privy-trained)"
+    )
 
     CHECK_LABEL_GROUPS = [
         ({"LOCATION"}, {"LOC", "LOCATION", "STREET_ADDRESS", "COORDINATE"}),
@@ -102,8 +105,7 @@ class CustomSpacyRecognizer(LocalRecognizer):
             for ent in ner_entities:
                 if not self.__check_label(entity, ent.label_, self.check_label_groups):
                     continue
-                textual_explanation = self.DEFAULT_EXPLANATION.format(
-                    ent.label_)
+                textual_explanation = self.DEFAULT_EXPLANATION.format(ent.label_)
                 explanation = self.build_spacy_explanation(
                     self.ner_strength, textual_explanation
                 )
@@ -128,5 +130,3 @@ class CustomSpacyRecognizer(LocalRecognizer):
         return any(
             [entity in egrp and label in lgrp for egrp, lgrp in check_label_groups]
         )
-
-
