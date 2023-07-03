@@ -1,10 +1,13 @@
-"""Streamlit app for Presidio + Privy-trained PII models."""
+"""Streamlit app for Spacy trained model and pattern recgnizer, flair model"""
 
 import spacy
-from spacy_recognizer import CustomSpacyRecognizer
+from recognizer.spacy_recognizer import CustomSpacyRecognizer
+from recognizer.spacy_pattern_recognizer import PatternRecognizerFactory
+from recognizer.flair_recognizer import FlairRecognizer
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine
 from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
+from presidio_analyzer.pattern import Pattern
 import pandas as pd
 from annotated_text import annotated_text
 from json import JSONEncoder
@@ -14,40 +17,27 @@ import streamlit as st
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 warnings.filterwarnings('ignore')
-# from flair_recognizer import FlairRecognizer
 
 # Helper methods
 @st.cache_resource()
 def analyzer_engine():
     """Return AnalyzerEngine."""
 
-    spacy_recognizer = CustomSpacyRecognizer()
-
-    configuration = {
-        "nlp_engine_name": "spacy",
-        "models": [
-            {"lang_code": "en", "model_name": "en_spacy_pii_distilbert"}],
-    }
-
-    # Create NLP engine based on configuration
-    provider = NlpEngineProvider(nlp_configuration=configuration)
-    nlp_engine = provider.create_engine()
-
     registry = RecognizerRegistry()
-    # add rule-based recognizers
-    registry.load_predefined_recognizers(nlp_engine=nlp_engine)
+    # add the custom build spacy recognizer
+    spacy_recognizer = CustomSpacyRecognizer()
     registry.add_recognizer(spacy_recognizer)
-    # remove the nlp engine we passed, to use custom label mappings
-    registry.remove_recognizer("SpacyRecognizer")
 
-    analyzer = AnalyzerEngine(nlp_engine=nlp_engine,
-                              registry=registry, supported_languages=["en"])
+    # add the custom build flair recognizer
+    flair_recognizer = FlairRecognizer()
+    registry.add_recognizer(flair_recognizer)
 
-    # uncomment for flair-based NLP recognizer
-    # flair_recognizer = FlairRecognizer()
-    # registry.load_predefined_recognizers()
-    # registry.add_recognizer(flair_recognizer)
-    # analyzer = AnalyzerEngine(registry=registry, supported_languages=["en"])
+    # add the pattern recognizer
+    pattern_recognizer_factory = PatternRecognizerFactory()
+    for recognizer in pattern_recognizer_factory.create_pattern_recognizer():
+        registry.add_recognizer(recognizer)
+
+    analyzer = AnalyzerEngine(registry=registry, supported_languages=["en"])
     return analyzer
 
 
