@@ -8,13 +8,12 @@ from presidio_anonymizer import AnonymizerEngine
 from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
 from presidio_analyzer.pattern import Pattern
 import pandas as pd
-from annotated_text.util import get_annotated_html as get_annotated_html
+from annotated_text.util import get_annotated_html
 from json import JSONEncoder
 import json
 import warnings
 import streamlit as st
 import os
-
 
 @click.command()
 @click.option(
@@ -28,22 +27,17 @@ import os
     default="whole",
     help="Model type (predefined_model_with spacy or flair, pattern_recognizer or combine those toghether)",
 )
-@click.option(
-    "--file_type",
-    "-t",
-    type=click.Choice(["html", "txt"]),
-    default="txt",
-    help="File type (txt, html)",
-)
 @click.option("--stats_report", "-s", is_flag=True, help="Generate stats report")
-def run(input_file, output_file, file_type, model, stats_report):
+def run(input_file, output_file, model, stats_report):
     """Process the input file and generate the output file."""
     click.echo(
-        f"Running with input file: {input_file}, output file: {output_file}, file type: {file_type} using model {model}"
+        f"Running with input file: {input_file}, output file: {output_file}, file type:using model {model}"
     )
-    process_data(input_file, output_file, file_type, model, stats_report)
+    process_data(input_file, output_file, model, stats_report)
+
 
     click.echo("Process completed.")
+
 
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -81,6 +75,7 @@ def analyzer_engine(model="whole"):
         # add the custom build flair recognizer
         flair_recognizer = FlairRecognizer()
         registry.add_recognizer(flair_recognizer)
+
 
         # add the pattern recognizer
         pattern_recognizer_factory = PatternRecognizerFactory()
@@ -140,35 +135,30 @@ class CustomEncoder(JSONEncoder):
         return o.__dict__
 
 
-def process_data(input_file, output_file, file_type, model, stats_report):
+def process_data(input_file, output_file, model, stats_report):
     """Process the input file and generate the output file."""
     analyzer = analyzer_engine(model)
     with open(input_file, "r") as f:
         text = f.read()
-        results = analyzer.analyze(
-            text=text,
-            language="en",
-            entities=get_supported_entities(),
-            return_decision_process=True,
-        )
+        results = analyzer.analyze(text=text, language="en", entities=get_supported_entities(),
+                                   return_decision_process=True)
         anonymized_text = anonymize(text, results)
-        if file_type == "txt":
-            with open(output_file, "w") as f:
-                f.write(anonymized_text)
-        elif file_type == "html":
-            backslash_char = "\\"
-            annotated_tokens = annotate(text, results, get_supported_entities())
-            html = get_annotated_html(*annotated_tokens)
-            with open(output_file, "w") as f:
-                f.write(
-                    f"<html><body><p>{html.replace('{backslash_char}n', '<br>')}</p></body></html>"
-                )
-        else:
-            raise ValueError(f"Unsupported file type: {file_type}")
-        if stats_report:
-            stats = results
-            with open(f"{output_file}_stats.json", "w") as f:
-                json.dump(stats, f, cls=CustomEncoder)
+   
+    with open(output_file, "w") as f:
+        f.write(anonymized_text)
+    backslash_char = "\\"
+    annotated_tokens = annotate(text, results, get_supported_entities()) 
+    html = get_annotated_html(*annotated_tokens) 
+    with open(output_file[:-4] + ".html", "w") as f:
+        f.write(
+            f"<html><body><p>{html.replace('{backslash_char}n', '<br>')}</p></body></html>"
+        )
+    if stats_report:
+        stats = results
+        with open(f"{output_file[:-4]}_stats.json", "w") as f:
+            json.dump(stats, f, cls=CustomEncoder)
+  
+
 
 
 if __name__ == "__main__":
