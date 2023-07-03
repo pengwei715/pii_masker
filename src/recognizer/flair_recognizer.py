@@ -222,24 +222,3 @@ class FlairRecognizer(EntityRecognizer):
         )
 
 
-if __name__ == "__main__":
-
-    from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
-
-    flair_recognizer = (
-        FlairRecognizer()
-    )  # This would download a very large (+2GB) model on the first run
-
-    registry = RecognizerRegistry()
-    registry.add_recognizer(flair_recognizer)
-
-    analyzer = AnalyzerEngine(registry=registry)
-
-    results = analyzer.analyze(
-        "{first_name: Moustafa, sale_id: 235234}",
-        language="en",
-        return_decision_process=True,
-    )
-    for result in results:
-        print(result)
-        print(result.analysis_explanation)
