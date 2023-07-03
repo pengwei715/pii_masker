@@ -15,6 +15,7 @@ import warnings
 import streamlit as st
 import os
 
+
 @click.command()
 @click.option(
     "--input_file", "-i", type=click.Path(exists=True), help="Input file path"
@@ -35,9 +36,7 @@ def run(input_file, output_file, model, stats_report):
     )
     process_data(input_file, output_file, model, stats_report)
 
-
     click.echo("Process completed.")
-
 
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -75,7 +74,6 @@ def analyzer_engine(model="whole"):
         # add the custom build flair recognizer
         flair_recognizer = FlairRecognizer()
         registry.add_recognizer(flair_recognizer)
-
 
         # add the pattern recognizer
         pattern_recognizer_factory = PatternRecognizerFactory()
@@ -140,15 +138,19 @@ def process_data(input_file, output_file, model, stats_report):
     analyzer = analyzer_engine(model)
     with open(input_file, "r") as f:
         text = f.read()
-        results = analyzer.analyze(text=text, language="en", entities=get_supported_entities(),
-                                   return_decision_process=True)
+        results = analyzer.analyze(
+            text=text,
+            language="en",
+            entities=get_supported_entities(),
+            return_decision_process=True,
+        )
         anonymized_text = anonymize(text, results)
-   
+
     with open(output_file, "w") as f:
         f.write(anonymized_text)
     backslash_char = "\\"
-    annotated_tokens = annotate(text, results, get_supported_entities()) 
-    html = get_annotated_html(*annotated_tokens) 
+    annotated_tokens = annotate(text, results, get_supported_entities())
+    html = get_annotated_html(*annotated_tokens)
     with open(output_file[:-4] + ".html", "w") as f:
         f.write(
             f"<html><body><p>{html.replace('{backslash_char}n', '<br>')}</p></body></html>"
@@ -157,8 +159,6 @@ def process_data(input_file, output_file, model, stats_report):
         stats = results
         with open(f"{output_file[:-4]}_stats.json", "w") as f:
             json.dump(stats, f, cls=CustomEncoder)
-  
-
 
 
 if __name__ == "__main__":
