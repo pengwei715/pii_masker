@@ -1,6 +1,6 @@
-from recognizer.spacy_recognizer import CustomSpacyRecognizer
-from recognizer.spacy_pattern_recognizer import PatternRecognizerFactory
-from recognizer.flair_recognizer import FlairRecognizer
+from .recognizer.spacy_recognizer import CustomSpacyRecognizer
+from .recognizer.spacy_pattern_recognizer import PatternRecognizerFactory
+from .recognizer.flair_recognizer import FlairRecognizer
 from presidio_anonymizer import AnonymizerEngine
 from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
 from annotated_text.util import get_annotated_html

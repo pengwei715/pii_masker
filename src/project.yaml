@@ -1,6 +1,6 @@
 kind: project
 metadata:
-  name: pii-pengwei-pengwei
+  name: pii-pengwei
   created: '2023-07-05T18:46:24.683000'
 spec:
   functions:
@@ -25,7 +25,6 @@ spec:
   source: https://github.com/pengwei715/pii_masker
   load_source_on_run: true
   desired_state: online
-  owner: PengWei
   default_image: mlrun/ml-models
 status:
   state: online
