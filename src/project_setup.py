@@ -45,7 +45,7 @@ def create_and_set_project(
         if default_image is None:
             print("Building image for the demo:")
             image_builder = project.set_function(
-                "project_setup.py",
+                "src/project_setup.py",
                 name="image-builder",
                 handler="assert_build",
                 kind="job",
@@ -64,7 +64,7 @@ def create_and_set_project(
 
     # Set the data collection function:
     project.set_function(
-        "process.py",
+        func="src/process.py",
         name="process",
         image=default_image,
         kind="job",
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     )
 
     proj.run_function(
-        "process",
+        func = "src/process.py",
         handler="process",
         params={
             "input_file": "data/pii.txt",
@@ -95,4 +95,5 @@ if __name__ == "__main__":
             "model": "whole",
             "stats_report": True,
         },
+        with_repo=True
     )
