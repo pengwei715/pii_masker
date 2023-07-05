@@ -66,6 +66,7 @@ def create_and_set_project(
         name="process_data",
         image=default_image,
         kind="job",
+        handler="process_data",
     )
 
     # Save and return the project:
