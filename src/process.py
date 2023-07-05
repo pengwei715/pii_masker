@@ -1,12 +1,8 @@
-import spacy
 from recognizer.spacy_recognizer import CustomSpacyRecognizer
 from recognizer.spacy_pattern_recognizer import PatternRecognizerFactory
 from recognizer.flair_recognizer import FlairRecognizer
-from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine
 from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
-from presidio_analyzer.pattern import Pattern
-import pandas as pd
 from annotated_text.util import get_annotated_html
 from json import JSONEncoder
 import json
@@ -17,6 +13,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 warnings.filterwarnings("ignore")
 
 # Helper methods
+
+
 def analyzer_engine(model="whole"):
     """Return AnalyzerEngine."""
     registry = RecognizerRegistry()
@@ -82,14 +80,15 @@ def annotate(text, st_analyze_results, st_entities):
             tokens.append(text[: res.start])
 
         # append entity text and entity type
-        tokens.append((text[res.start : res.end], res.entity_type))
+        tokens.append((text[res.start: res.end], res.entity_type))
 
-        # if another entity coming i.e. we're not at the last results element, add text up to next entity
+        # if another entity coming i.e. we're not at the last results element,
+        # add text up to next entity
         if i != len(results) - 1:
-            tokens.append(text[res.end : results[i + 1].start])
+            tokens.append(text[res.end: results[i + 1].start])
         # if no more entities coming, add all remaining text
         else:
-            tokens.append(text[res.end :])
+            tokens.append(text[res.end:])
     return tokens
 
 
@@ -113,7 +112,6 @@ def process_data(input_file, output_file, model, stats_report):
 
     with open(output_file, "w") as f:
         f.write(anonymized_text)
-    backslash_char = "\\"
     annotated_tokens = annotate(text, results, get_supported_entities())
     html = get_annotated_html(*annotated_tokens)
     with open(output_file[:-4] + ".html", "w") as f:
