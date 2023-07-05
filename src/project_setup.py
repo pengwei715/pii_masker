@@ -84,6 +84,7 @@ if __name__ == "__main__":
         name="pii",
         user_project=True,
     )
+    print(proj.to_yaml())
     print(proj.get_function("process"))
 
     proj.run_function(
@@ -93,4 +94,5 @@ if __name__ == "__main__":
             "output_file": "data/pii_output.txt",
             "model": "whole",
         },
+        auto_build=True
     )
