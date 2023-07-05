@@ -2,20 +2,22 @@ import mlrun
 import importlib
 
 IMAGE_REQUIREMENTS = [
-            "pandas",
-            "streamlit",
-            "presidio-anonymizer",
-            "presidio-analyzer",
-            "torch",
-            "flair@git+https://github.com/flairNLP/flair.git@d4ed67bf663e4066517f00397412510d90043653",
-            "st-annotated-text",
-            "https://huggingface.co/beki/en_spacy_pii_distilbert/resolve/main/en_spacy_pii_distilbert-any-py3-none-any.whl"
+    "pandas",
+    "streamlit",
+    "presidio-anonymizer",
+    "presidio-analyzer",
+    "torch",
+    "flair@git+https://github.com/flairNLP/flair.git@d4ed67bf663e4066517f00397412510d90043653",
+    "st-annotated-text",
+    "https://huggingface.co/beki/en_spacy_pii_distilbert/resolve/main/en_spacy_pii_distilbert-any-py3-none-any.whl",
 ]
+
 
 def assert_build():
     for module_name in IMAGE_REQUIREMENTS:
         module = importlib.import_module(module_name)
         print(f"Successfully imported {module_name}.")
+
 
 def create_and_set_project(
     git_source: str,
@@ -67,11 +69,14 @@ def create_and_set_project(
         image=default_image,
         kind="job",
         handler="process_data",
+        with_repo=True,
+        requirements=IMAGE_REQUIREMENTS,
     )
 
     # Save and return the project:
     project.save()
     return project
+
 
 if __name__ == "__main__":
     proj = create_and_set_project(
@@ -81,14 +86,13 @@ if __name__ == "__main__":
         user_project=True,
     )
 
-    proj.run_function("process_data", handler="process_data", 
-                      params={
-                          "input_file": "data/pii.txt",
-                          "output_file": "data/pii_output.txt",
-                          "model" :"whole",
-                          "stats_report" : True,
-                          }
-                      )
-
-
-
+    proj.run_function(
+        "process_data",
+        handler="process_data",
+        params={
+            "input_file": "data/pii.txt",
+            "output_file": "data/pii_output.txt",
+            "model": "whole",
+            "stats_report": True,
+        },
+    )
