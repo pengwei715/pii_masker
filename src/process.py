@@ -8,6 +8,7 @@ from json import JSONEncoder
 import json
 import warnings
 import os
+import mlrun
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 warnings.filterwarnings("ignore")
@@ -96,7 +97,7 @@ class CustomEncoder(JSONEncoder):
     def default(self, o):
         return o.__dict__
 
-
+@mlrun.handler(name="process")
 def process_data(input_file, output_file, model, stats_report):
     """Process the input file and generate the output file."""
     analyzer = analyzer_engine(model)
