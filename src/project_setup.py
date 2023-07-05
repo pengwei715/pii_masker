@@ -19,7 +19,7 @@ def assert_build():
 
 def create_and_set_project(
     git_source: str,
-    name: str = "pii-demo",
+    name: str = "pii",
     default_image: str = None,
     default_base_image: str = "mlrun/ml-models",
     user_project: bool = True,
@@ -43,7 +43,7 @@ def create_and_set_project(
         if default_image is None:
             print("Building image for the demo:")
             image_builder = project.set_function(
-                "src/project_setup.py",
+                "project_setup.py",
                 name="image-builder",
                 handler="assert_build",
                 kind="job",
@@ -62,8 +62,8 @@ def create_and_set_project(
 
     # Set the data collection function:
     project.set_function(
-        "src/process.py",
-        name="processing",
+        "process.py",
+        name="process_data",
         image=default_image,
         kind="job",
     )
@@ -71,3 +71,13 @@ def create_and_set_project(
     # Save and return the project:
     project.save()
     return project
+
+if __name__ == "__main__":
+    proj = create_and_set_project(
+        git_source="https://github.com/pengwei715/pii_masker",
+        name="pii-pengwei",
+        default_image="mlrun/ml-models",
+        user_project=True,
+    )
+
+
