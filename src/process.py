@@ -463,7 +463,7 @@ class CustomEncoder(JSONEncoder):
 
 
 @mlrun.handler(name="process")
-def process(input_file, output_file, model, stats_report):
+def process(input_file, output_file, model):
     """Process the input file and generate the output file."""
     analyzer = analyzer_engine(model)
     with open(input_file, "r") as f:
@@ -484,7 +484,6 @@ def process(input_file, output_file, model, stats_report):
         f.write(
             f"<html><body><p>{html.replace('{backslash_char}n', '<br>')}</p></body></html>"
         )
-    if stats_report:
-        stats = results
-        with open(f"{output_file[:-4]}_stats.json", "w") as f:
-            json.dump(stats, f, cls=CustomEncoder)
+    stats = results
+    with open(f"{output_file[:-4]}_stats.json", "w") as f:
+        json.dump(stats, f, cls=CustomEncoder)

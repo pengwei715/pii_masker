@@ -92,6 +92,5 @@ if __name__ == "__main__":
             "input_file": "data/pii.txt",
             "output_file": "data/pii_output.txt",
             "model": "whole",
-            "stats_report": True,
         },
     )
