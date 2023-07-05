@@ -11,10 +11,7 @@ from annotated_text.util import get_annotated_html
 from json import JSONEncoder
 import json
 import warnings
-import streamlit as st
 import os
-
-
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 warnings.filterwarnings("ignore")
@@ -24,39 +21,30 @@ def analyzer_engine(model="whole"):
     """Return AnalyzerEngine."""
     registry = RecognizerRegistry()
 
+    spacy_recognizer = CustomSpacyRecognizer()
+
+    flair_recognizer = FlairRecognizer()
+
     if model == "spacy":
         # add the custom build spacy recognizer
-        spacy_recognizer = CustomSpacyRecognizer()
         registry.add_recognizer(spacy_recognizer)
-        analyzer = AnalyzerEngine(registry=registry, supported_languages=["en"])
     if model == "flair":
         # add the custom build flair recognizer
-        flair_recognizer = FlairRecognizer()
         registry.add_recognizer(flair_recognizer)
-        analyzer = AnalyzerEngine(registry=registry, supported_languages=["en"])
-
     if model == "pattern":
         # add the pattern recognizer
         pattern_recognizer_factory = PatternRecognizerFactory()
         for recognizer in pattern_recognizer_factory.create_pattern_recognizer():
             registry.add_recognizer(recognizer)
-
-        analyzer = AnalyzerEngine(registry=registry, supported_languages=["en"])
     if model == "whole":
-
-        # add the custom build spacy recognizer
-        spacy_recognizer = CustomSpacyRecognizer()
         registry.add_recognizer(spacy_recognizer)
-
-        # add the custom build flair recognizer
-        flair_recognizer = FlairRecognizer()
         registry.add_recognizer(flair_recognizer)
-
         # add the pattern recognizer
         pattern_recognizer_factory = PatternRecognizerFactory()
         for recognizer in pattern_recognizer_factory.create_pattern_recognizer():
             registry.add_recognizer(recognizer)
-            analyzer = AnalyzerEngine(registry=registry, supported_languages=["en"])
+
+    analyzer = AnalyzerEngine(registry=registry, supported_languages=["en"])
     return analyzer
 
 
