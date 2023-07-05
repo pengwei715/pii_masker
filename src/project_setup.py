@@ -62,7 +62,7 @@ def create_and_set_project(
     # Set the project git source:
     project.set_source(git_source, pull_at_runtime=True)
 
-    # Set the data collection function:
+    # Set the data process function:
     project.set_function(
         func="src/process.py",
         name="process",
@@ -80,20 +80,18 @@ def create_and_set_project(
 
 if __name__ == "__main__":
     proj = create_and_set_project(
-        git_source="https://github.com/pengwei715/pii_masker",
+        git_source="https://github.com/pengwei715/pii_masker.git",
         name="pii",
-        default_image="mlrun/ml-models",
         user_project=True,
     )
+    print(proj.get_function("process"))
 
     proj.run_function(
-        func = "src/process.py",
-        handler="process",
-        params={
+        "process",
+        inputs={
             "input_file": "data/pii.txt",
             "output_file": "data/pii_output.txt",
             "model": "whole",
             "stats_report": True,
         },
-        with_repo=True
     )

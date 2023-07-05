@@ -1,19 +1,37 @@
 from presidio_anonymizer import AnonymizerEngine
-from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
 from annotated_text.util import get_annotated_html
 from json import JSONEncoder
 import json
 import warnings
 import os
 import mlrun
+import logging
+from typing import Optional, List, Tuple, Set
+
+from presidio_analyzer import (
+    RecognizerRegistry,
+    AnalyzerEngine,
+    RecognizerResult,
+    LocalRecognizer,
+    EntityRecognizer,
+    Pattern,
+    Pattern_Recognizer,
+    AnalysisExplanation,
+)
+from presidio_analyzer.nlp_engine import NlpArtifacts
+from presidio_analyzer.predefined_recognizers.spacy_recognizer import SpacyRecognizer
+
+try:
+    from flair.data import Sentence
+    from flair.models import SequenceTagger
+except ImportError:
+    print("Flair is not installed")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 warnings.filterwarnings("ignore")
 
 # Helper methods
 
-from presidio_analyzer import PatternRecognizer
-from presidio_analyzer.pattern import Pattern
 
 ENTITIES = {
     "CREDIT_CARD": [Pattern("CREDIT_CARD", r"\b(?:\d[ -]*?){13,16}\b", 0.5)],
@@ -30,16 +48,7 @@ class PatternRecognizerFactory:
         for entity, pattern in ENTITIES.items():
             res.append(PatternRecognizer(supported_entity=entity, patterns=pattern))
         return res
-import logging
-from typing import Optional, List, Tuple, Set
 
-from presidio_analyzer import (
-    RecognizerResult,
-    LocalRecognizer,
-    AnalysisExplanation,
-)
-from presidio_analyzer.nlp_engine import NlpArtifacts
-from presidio_analyzer.predefined_recognizers.spacy_recognizer import SpacyRecognizer
 
 logger = logging.getLogger("presidio-analyzer")
 
@@ -162,21 +171,6 @@ class CustomSpacyRecognizer(LocalRecognizer):
         return any(
             [entity in egrp and label in lgrp for egrp, lgrp in check_label_groups]
         )
-import logging
-from typing import Optional, List, Tuple, Set
-
-from presidio_analyzer import (
-    RecognizerResult,
-    EntityRecognizer,
-    AnalysisExplanation,
-)
-from presidio_analyzer.nlp_engine import NlpArtifacts
-
-try:
-    from flair.data import Sentence
-    from flair.models import SequenceTagger
-except ImportError:
-    print("Flair is not installed")
 
 
 logger = logging.getLogger("presidio-analyzer")
@@ -385,6 +379,7 @@ class FlairRecognizer(EntityRecognizer):
             [entity in egrp and label in lgrp for egrp, lgrp in check_label_groups]
         )
 
+
 def analyzer_engine(model="whole"):
     """Return AnalyzerEngine."""
     registry = RecognizerRegistry()
@@ -450,21 +445,22 @@ def annotate(text, st_analyze_results, st_entities):
             tokens.append(text[: res.start])
 
         # append entity text and entity type
-        tokens.append((text[res.start: res.end], res.entity_type))
+        tokens.append((text[res.start : res.end], res.entity_type))
 
         # if another entity coming i.e. we're not at the last results element,
         # add text up to next entity
         if i != len(results) - 1:
-            tokens.append(text[res.end: results[i + 1].start])
+            tokens.append(text[res.end : results[i + 1].start])
         # if no more entities coming, add all remaining text
         else:
-            tokens.append(text[res.end:])
+            tokens.append(text[res.end :])
     return tokens
 
 
 class CustomEncoder(JSONEncoder):
     def default(self, o):
         return o.__dict__
+
 
 @mlrun.handler(name="process")
 def process(input_file, output_file, model, stats_report):
