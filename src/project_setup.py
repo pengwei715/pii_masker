@@ -79,9 +79,9 @@ def create_and_set_project(
 
 
 if __name__ == "__main__":
-    proj = create_and_set_project(
+    proj = get_or_create_project(
         git_source="https://github.com/pengwei715/pii_masker",
-        name="pii-pengwei",
+        name="pii",
         default_image="mlrun/ml-models",
         user_project=True,
     )
