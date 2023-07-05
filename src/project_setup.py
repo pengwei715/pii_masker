@@ -65,10 +65,10 @@ def create_and_set_project(
     # Set the data collection function:
     project.set_function(
         "process.py",
-        name="process_data",
+        name="process",
         image=default_image,
         kind="job",
-        handler="process_data",
+        handler="process",
         with_repo=True,
         requirements=IMAGE_REQUIREMENTS,
     )
@@ -87,8 +87,8 @@ if __name__ == "__main__":
     )
 
     proj.run_function(
-        "process_data",
-        handler="process_data",
+        "process",
+        handler="process",
         params={
             "input_file": "data/pii.txt",
             "output_file": "data/pii_output.txt",

@@ -98,7 +98,7 @@ class CustomEncoder(JSONEncoder):
         return o.__dict__
 
 @mlrun.handler(name="process")
-def process_data(input_file, output_file, model, stats_report):
+def process(input_file, output_file, model, stats_report):
     """Process the input file and generate the output file."""
     analyzer = analyzer_engine(model)
     with open(input_file, "r") as f:
