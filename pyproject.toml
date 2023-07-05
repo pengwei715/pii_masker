@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "pii-masker"
+version = "0.1.0"
+description = ""
+authors = ["peng wei <pengwei715@gmail.com>"]
+readme = "README.md"
+packages = [{include = "pii_masker"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
