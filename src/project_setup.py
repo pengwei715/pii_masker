@@ -80,7 +80,7 @@ def create_and_set_project(
 
 if __name__ == "__main__":
     proj = create_and_set_project(
-        git_source="https://github.com/pengwei715/pii_masker.git",
+        git_source="git://github.com/pengwei715/pii_masker.git",
         name="pii",
         user_project=True,
     )
