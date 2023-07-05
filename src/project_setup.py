@@ -81,4 +81,14 @@ if __name__ == "__main__":
         user_project=True,
     )
 
+    proj.run_function("process_data", handler="process_data", 
+                      params={
+                          "input_file": "data/pii.txt",
+                          "output_file": "data/pii_output.txt",
+                          "model" :"whole",
+                          "stats_report" : True,
+                          }
+                      )
+
+
 

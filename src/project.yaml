@@ -1,0 +1,21 @@
+kind: project
+metadata:
+  name: pii-pengwei-pengwei
+  created: '2023-07-05T18:46:24.683000'
+spec:
+  functions:
+  - url: process.py
+    name: process_data
+    kind: job
+    image: mlrun/ml-models
+    handler: process_data
+  workflows: []
+  artifacts: []
+  conda: ''
+  source: https://github.com/pengwei715/pii_masker
+  load_source_on_run: true
+  desired_state: online
+  owner: PengWei
+  default_image: mlrun/ml-models
+status:
+  state: online
