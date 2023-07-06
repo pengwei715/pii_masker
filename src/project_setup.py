@@ -59,6 +59,7 @@ def create_and_set_project(
             default_image = build_status.outputs["image"]
         project.set_default_image(default_image)
 
+
     # Set the project git source:
     project.set_source(git_source, pull_at_runtime=True)
 
@@ -94,5 +95,5 @@ if __name__ == "__main__":
             "output_file": "data/pii_output.txt",
             "model": "whole",
         },
-        auto_build=True
+        auto_build=False,
     )
