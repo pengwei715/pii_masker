@@ -500,33 +500,28 @@ class CustomEncoder(JSONEncoder):
         return o.__dict__
 
 
-def process(input_file, output_file, model):
+def process(text: str, model: str = "whole"):
     """
-    Process the input file and generate the output file.
-
-    :param input_file: Input file path
-    :param output_file: Output file path
+    Process the text of str using the model.
+    :param txt: Text to process
     :param model: Model to use for processing
+    :returns: The anonymized text, the html string and the stats report.
     """
     analyzer = analyzer_engine(model)
-    with open(input_file, "r") as f:
-        text = f.read()
-        results = analyzer.analyze(
-            text=text,
-            language="en",
-            entities=get_supported_entities(),
-            return_decision_process=True,
-        )
-        anonymized_text = anonymize(text, results)
+    results = analyzer.analyze(
+        text=text,
+        language="en",
+        entities=get_supported_entities(),
+        return_decision_process=True,
+    )
+    anonymized_text = anonymize(text, results)
 
-    with open(output_file, "w") as f:
-        f.write(anonymized_text)
     annotated_tokens = annotate(text, results, get_supported_entities())
     html = get_annotated_html(*annotated_tokens)
-    with open(output_file[:-4] + ".html", "w") as f:
-        f.write(
-            f"<html><body><p>{html.replace('{backslash_char}n', '<br>')}</p></body></html>"
-        )
+    backslash_char = "\\"
+
+    html_str = f"<html><body><p>{html.replace('{backslash_char}n', '<br>')}</p></body></html>"
+
     stats = results
-    with open(f"{output_file[:-4]}_stats.json", "w") as f:
-        json.dump(stats, f, cls=CustomEncoder)
+
+    return anonymized_text, html_str, stats
