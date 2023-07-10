@@ -88,11 +88,12 @@ def test_pattern_process(fake_data):
 
     assert all(entity in res for entity in ENTITIES.keys())
 
+
 def test_spacy_process(fake_data):
     ENTITIES = {
-            "PERSON": "name",
-            "ORGANIZATION": "organization",
-            }
+        "PERSON": "name",
+        "ORGANIZATION": "organization",
+    }
 
     text = f"{fake_data['name']}'s employer is {fake_data['organization']}."
     res, html, rpt = process(text, "spacy")
@@ -100,26 +101,26 @@ def test_spacy_process(fake_data):
     assert all(entity in res for entity in ENTITIES.keys())
 
 
-def test_flair_process(fake_data):    
-    ENTITIES = [
-            "LOCATION",
-            "PERSON",
-            "NRP",
-            "GPE",
-            "ORGANIZATION",
-            "MAC_ADDRESS",
-            "US_BANK_NUMBER",
-            "IMEI",
-            "TITLE",
-            "LICENSE_PLATE",
-            "US_PASSPORT",
-            "CURRENCY",
-            "ROUTING_NUMBER",
-            "US_ITIN",
-            "US_BANK_NUMBER",
-            "US_DRIVER_LICENSE",
-            "AGE",
-            "PASSWORD",
-            "SWIFT_CODE",
-        ]
-    pass
+def test_flair_process(fake_data):
+    ENTITIES = {
+        "LOCATION": "location",
+        "PERSON": "name",
+        "ORGANIZATION": "organization",
+        "MAC_ADDRESS": "mac_address",
+        "US_BANK_NUMBER": "us_bank_number",
+        "IMEI": "imei",
+        "TITLE": "title",
+        "LICENSE_PLATE": "license_plate",
+        "US_PASSPORT": "us_passport",
+        "CURRENCY": "currency",
+        "ROUTING_NUMBER": "routing_number",
+        "US_ITIN": "us_itin",
+        "US_BANK_NUMBER": "us_bank_number",
+        "AGE": "age",
+        "PASSWORD": "password",
+        "SWIFT_CODE": "swift_code",
+    }
+    text = " ".join([item+ " is " + str(fake_data[item]) for item in ENTITIES.values()])
+    res, html, rpt = process(text, "flair")
+    assert all(entity in res for entity in ENTITIES.keys())
+
