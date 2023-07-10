@@ -520,7 +520,9 @@ def process(text: str, model: str = "whole"):
     html = get_annotated_html(*annotated_tokens)
     backslash_char = "\\"
 
-    html_str = f"<html><body><p>{html.replace('{backslash_char}n', '<br>')}</p></body></html>"
+    html_str = (
+        f"<html><body><p>{html.replace('{backslash_char}n', '<br>')}</p></body></html>"
+    )
 
     stats = results
 

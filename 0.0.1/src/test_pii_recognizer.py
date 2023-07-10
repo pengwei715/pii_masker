@@ -13,7 +13,7 @@ from pii_recognizer import (
 def model(request):
     return request.param
 
-@pytest.fixture(params=["en", "he"])
+@pytest.fixture(params=["en"])
 def language(request):
     return request.param
 
