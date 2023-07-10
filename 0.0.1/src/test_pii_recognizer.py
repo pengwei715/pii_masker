@@ -54,8 +54,8 @@ def fake_data(request):
         "ssn": fake.ssn(),
         "credit_card": fake.credit_card_number(),
         "organization": fake.company(),
-        "location": fake.address(),
-        "date_time": fake.date_time(),
+        "location": fake.street_address(),
+        "date_time": fake.date(),
         "mac_address": fake.mac_address(),
         "us_bank_number": fake.bban(),
         "imei": "".join(str(fake.random_int(0, 9)) for _ in range(14)),
@@ -87,3 +87,39 @@ def test_pattern_process(fake_data):
     res, html, rpt = process(text, "pattern")
 
     assert all(entity in res for entity in ENTITIES.keys())
+
+def test_spacy_process(fake_data):
+    ENTITIES = {
+            "PERSON": "name",
+            "ORGANIZATION": "organization",
+            }
+
+    text = f"{fake_data['name']}'s employer is {fake_data['organization']}."
+    res, html, rpt = process(text, "spacy")
+
+    assert all(entity in res for entity in ENTITIES.keys())
+
+
+def test_flair_process(fake_data):    
+    ENTITIES = [
+            "LOCATION",
+            "PERSON",
+            "NRP",
+            "GPE",
+            "ORGANIZATION",
+            "MAC_ADDRESS",
+            "US_BANK_NUMBER",
+            "IMEI",
+            "TITLE",
+            "LICENSE_PLATE",
+            "US_PASSPORT",
+            "CURRENCY",
+            "ROUTING_NUMBER",
+            "US_ITIN",
+            "US_BANK_NUMBER",
+            "US_DRIVER_LICENSE",
+            "AGE",
+            "PASSWORD",
+            "SWIFT_CODE",
+        ]
+    pass
