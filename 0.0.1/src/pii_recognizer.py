@@ -4,9 +4,9 @@ from json import JSONEncoder
 import json
 import warnings
 import os
-import mlrun
 import logging
 from typing import Optional, List, Tuple, Set
+import mlrun
 
 from presidio_analyzer import (
     RecognizerRegistry,
@@ -29,32 +29,26 @@ except ImportError:
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 warnings.filterwarnings("ignore")
-
-# Helper methods
-
-
-ENTITIES = {
-    "CREDIT_CARD": [Pattern("CREDIT_CARD", r"\b(?:\d[ -]*?){13,16}\b", 0.5)],
-    "SSN": [Pattern("SSN", r"\b\d{3}-?\d{2}-?\d{4}\b", 0.5)],
-    "PHONE": [Pattern("PHONE", r"\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}", 0.5)],
-    "EMAIL": [Pattern("EMAIL", r"\S+@\S+", 0.5)],
-}
+logger = logging.getLogger("pii-recognizer")
 
 
 class PatternRecognizerFactory:
+    ENTITIES = {
+        "CREDIT_CARD": [Pattern("CREDIT_CARD", r"\b(?:\d[ -]*?){13,16}\b", 0.5)],
+        "SSN": [Pattern("SSN", r"\b\d{3}-?\d{2}-?\d{4}\b", 0.5)],
+        "PHONE": [Pattern("PHONE", r"\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}", 0.5)],
+        "EMAIL": [Pattern("EMAIL", r"\S+@\S+", 0.5)],
+    }
+
     @staticmethod
     def create_pattern_recognizer():
         res = []
-        for entity, pattern in ENTITIES.items():
+        for entity, pattern in self.ENTITIES.items():
             res.append(PatternRecognizer(supported_entity=entity, patterns=pattern))
         return res
 
 
-logger = logging.getLogger("presidio-analyzer")
-
-
 class CustomSpacyRecognizer(LocalRecognizer):
-
     ENTITIES = [
         "LOCATION",
         "PERSON",
@@ -95,6 +89,15 @@ class CustomSpacyRecognizer(LocalRecognizer):
         context: Optional[List[str]] = None,
         ner_strength: float = 0.85,
     ):
+        """
+        Initialize Spacy Recognizer.
+        :param supported_language: Language to use
+        :param supported_entities: Entities to use
+        :param check_label_groups: Label groups to check
+        :param context: Context to use
+        :param ner_strength: NER strength to use
+        :returns SpacyRecognizer object
+        """
         self.ner_strength = ner_strength
         self.check_label_groups = (
             check_label_groups if check_label_groups else self.CHECK_LABEL_GROUPS
@@ -112,7 +115,7 @@ class CustomSpacyRecognizer(LocalRecognizer):
     def get_supported_entities(self) -> List[str]:
         """
         Return supported entities by this model.
-        :return: List of the supported entities.
+        :returns List of the supported entities.
         """
         return self.supported_entities
 
@@ -123,7 +126,7 @@ class CustomSpacyRecognizer(LocalRecognizer):
         Create explanation for why this result was detected.
         :param original_score: Score given by this recognizer
         :param explanation: Explanation string
-        :return:
+        :returns: AnalysisExplanation object
         """
         explanation = AnalysisExplanation(
             recognizer=self.__class__.__name__,
@@ -133,6 +136,13 @@ class CustomSpacyRecognizer(LocalRecognizer):
         return explanation
 
     def analyze(self, text, entities, nlp_artifacts=None):  # noqa D102
+        """
+        Analyze text using Spacy.
+        :param text: Text to analyze
+        :param entities: Entities to analyze
+        :param nlp_artifacts: NLP artifacts to use
+        :returns: List of RecognizerResult objects
+        """
         results = []
         if not nlp_artifacts:
             logger.warning("Skipping SpaCy, nlp artifacts not provided...")
@@ -168,6 +178,13 @@ class CustomSpacyRecognizer(LocalRecognizer):
     def __check_label(
         entity: str, label: str, check_label_groups: Tuple[Set, Set]
     ) -> bool:
+        """
+        Check if the label is in the label group.
+        :param entity: Entity to check
+        :param label: Label to check
+        :param check_label_groups: Label groups to check
+        :returns: True if the label is in the label group, False otherwise
+        """
         return any(
             [entity in egrp and label in lgrp for egrp, lgrp in check_label_groups]
         )
@@ -176,20 +193,6 @@ class CustomSpacyRecognizer(LocalRecognizer):
 class FlairRecognizer(EntityRecognizer):
     """
     Wrapper for a flair model, if needed to be used within Presidio Analyzer.
-    :example:
-    >from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
-    >flair_recognizer = FlairRecognizer()
-    >registry = RecognizerRegistry()
-    >registry.add_recognizer(flair_recognizer)
-    >analyzer = AnalyzerEngine(registry=registry)
-    >results = analyzer.analyze(
-    >    "My name is Christopher and I live in Irbid.",
-    >    language="en",
-    >    return_decision_process=True,
-    >)
-    >for result in results:
-    >    print(result)
-    >    print(result.analysis_explanation)
     """
 
     ENTITIES = [
@@ -265,6 +268,15 @@ class FlairRecognizer(EntityRecognizer):
         check_label_groups: Optional[Tuple[Set, Set]] = None,
         model: SequenceTagger = None,
     ):
+        """
+        Initialize the FlairRecognizer.
+        :param supported_language: Language to use
+        :param supported_entities: Entities to use
+        :param check_label_groups: Label groups to check
+        :param model: Flair model to use
+        :returns: FlairRecognizer object
+
+        """
         self.check_label_groups = (
             check_label_groups if check_label_groups else self.CHECK_LABEL_GROUPS
         )
@@ -289,7 +301,7 @@ class FlairRecognizer(EntityRecognizer):
     def get_supported_entities(self) -> List[str]:
         """
         Return supported entities by this model.
-        :return: List of the supported entities.
+        :returns: List of the supported entities.
         """
         return self.supported_entities
 
@@ -303,7 +315,7 @@ class FlairRecognizer(EntityRecognizer):
         :param entities: Not working properly for this recognizer.
         :param nlp_artifacts: Not used by this recognizer.
         :param language: Text language. Supported languages in MODEL_LANGUAGES
-        :return: The list of Presidio RecognizerResult constructed from the recognized
+        :returns: The list of Presidio RecognizerResult constructed from the recognized
             Flair detections.
         """
 
@@ -338,7 +350,12 @@ class FlairRecognizer(EntityRecognizer):
         return results
 
     def _convert_to_recognizer_result(self, entity, explanation) -> RecognizerResult:
-
+        """
+        Convert Flair result to Presidio RecognizerResult.
+        :param entity: Flair entity
+        :param explanation: AnalysisExplanation
+        :returns: RecognizerResult
+        """
         entity_type = self.PRESIDIO_EQUIVALENCES.get(entity.tag, entity.tag)
         flair_score = round(entity.score, 2)
 
@@ -359,7 +376,7 @@ class FlairRecognizer(EntityRecognizer):
         Create explanation for why this result was detected.
         :param original_score: Score given by this recognizer
         :param explanation: Explanation string
-        :return:
+        :returns: AnalysisExplanation
         """
         explanation = AnalysisExplanation(
             recognizer=self.__class__.__name__,
@@ -378,7 +395,10 @@ class FlairRecognizer(EntityRecognizer):
 
 
 def analyzer_engine(model="whole"):
-    """Return AnalyzerEngine."""
+    """Return AnalyzerEngine.
+    :param model: The model to use. Can be "spacy", "flair", "pattern" or "whole".
+    :returns: AnalyzerEngine
+    """
     registry = RecognizerRegistry()
 
     spacy_recognizer = CustomSpacyRecognizer()
@@ -409,24 +429,35 @@ def analyzer_engine(model="whole"):
 
 
 def anonymizer_engine():
-    """Return AnonymizerEngine."""
+    """Return AnonymizerEngine.
+    :returns: The AnonymizerEngine.
+    """
     return AnonymizerEngine()
 
 
 def get_supported_entities():
-    """Return supported entities from the Analyzer Engine."""
+    """Return supported entities from the Analyzer Engine.
+    :returns: The list of supported entities.
+    """
     return analyzer_engine().get_supported_entities()
 
 
 def analyze(**kwargs):
-    """Analyze input using Analyzer engine and input arguments (kwargs)."""
+    """Analyze input using Analyzer engine and input arguments (kwargs).
+    :param kwargs: The input arguments for the analyzer engine.
+    :returns: The list of Presidio RecognizerResult constructed from the recognized
+    """
     if "entities" not in kwargs or "All" in kwargs["entities"]:
         kwargs["entities"] = None
     return analyzer_engine().analyze(**kwargs)
 
 
 def anonymize(text, analyze_results):
-    """Anonymize identified input using Presidio Abonymizer."""
+    """Anonymize identified input using Presidio Abonymizer.
+    :param text: The text for analysis.
+    :param analyze_results: The list of Presidio RecognizerResult constructed from
+    :returns: The anonymized text.
+    """
     if not text:
         return
     res = anonymizer_engine().anonymize(text, analyze_results)
@@ -434,6 +465,12 @@ def anonymize(text, analyze_results):
 
 
 def annotate(text, st_analyze_results, st_entities):
+    """Annotate identified input using Presidio Anonymizer.
+    :param text: The text for analysis.
+    :param st_analyze_results: The list of Presidio RecognizerResult constructed from
+    :returns: The list of tokens with the identified entities.
+
+    """
     tokens = []
     # sort by start index
     results = sorted(st_analyze_results, key=lambda x: x.start)
@@ -455,13 +492,24 @@ def annotate(text, st_analyze_results, st_entities):
 
 
 class CustomEncoder(JSONEncoder):
+    """Custom encoder for JSONEncoder.
+    :param JSONEncoder: The JSONEncoder.
+    :returns: The JSONEncoder.
+    """
+
     def default(self, o):
         return o.__dict__
 
 
 @mlrun.handler(name="process")
 def process(input_file, output_file, model):
-    """Process the input file and generate the output file."""
+    """
+    Process the input file and generate the output file.
+
+    :param input_file: Input file path
+    :param output_file: Output file path
+    :param model: Model to use for processing
+    """
     analyzer = analyzer_engine(model)
     with open(input_file, "r") as f:
         text = f.read()
