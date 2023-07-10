@@ -6,7 +6,6 @@ import warnings
 import os
 import logging
 from typing import Optional, List, Tuple, Set
-import mlrun
 
 from presidio_analyzer import (
     RecognizerRegistry,
@@ -501,7 +500,6 @@ class CustomEncoder(JSONEncoder):
         return o.__dict__
 
 
-@mlrun.handler(name="process")
 def process(input_file, output_file, model):
     """
     Process the input file and generate the output file.
