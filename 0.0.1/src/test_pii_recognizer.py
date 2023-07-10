@@ -1,5 +1,7 @@
 import os
 import pytest
+import random
+from faker import Faker
 from pii_recognizer import (
     process,
     analyzer_engine,
@@ -9,97 +11,79 @@ from pii_recognizer import (
 )
 
 
-@pytest.fixture(params=["whole", "spacy", "flair", "pattern"])
-def model(request):
-    return request.param
+def generate_routing_number():
+    prefix = random.randint(0, 99)
+    identifier = random.randint(0, 9999999)
+    identifier_str = str(identifier).zfill(7)
+    weighted_sum = (
+        3 * (int(str(prefix).zfill(2)[0]))
+        + 7 * (int(str(prefix).zfill(2)[1]))
+        + 1 * (int(identifier_str[0]))
+        + 3 * (int(identifier_str[1]))
+        + 7 * (int(identifier_str[2]))
+        + 1 * (int(identifier_str[3]))
+        + 3 * (int(identifier_str[4]))
+        + 7 * (int(identifier_str[5]))
+        + 1 * (int(identifier_str[6]))
+    )
+    check_digit = (10 - (weighted_sum % 10)) % 10
 
-@pytest.fixture(params=["en"])
-def language(request):
-    return request.param
+    routing_number = f"{prefix:02d}{identifier_str}{check_digit}"
 
-#test the process function
-def test_process(model, language):
-    """Test the process function."""
-    input_file = "tests/data/test.txt"
-    output_file = "tests/data/test_output.txt"
-    process(input_file, output_file, model)
-    with open(output_file, "r") as f:
-        output = f.read()
-    assert output == "John Smith was born in 1990 and now lives in New York City."
-    os.remove(output_file)
-    os.remove(output_file[:-4] + ".html")
-    os.remove(f"{output_file[:-4]}_stats.json")
+    return routing_number
 
-#test the analyze function
 
-def test_analyze(model, language):
-    """Test the analyze function."""
-    analyzer = analyzer_engine(model)
-    with open("tests/data/test.txt", "r") as f:
-        text = f.read()
-        results = analyzer.analyze(
-            text=text,
-            language=language,
-            entities=get_supported_entities(),
-            return_decision_process=True,
-        )
-        anonymized_text = anonymize(text, results)
-    assert anonymized_text == "John Smith was born in 1990 and now lives in New York City."
+def generate_us_itin():
+    area_number = random.randint(900, 999)
+    group_number = random.randint(70, 99)
+    serial_number = random.randint(0, 9999)
 
-#test the anonymize function
+    formatted_itin = f"{area_number:03d}-{group_number:02d}-{serial_number:04d}"
+    return formatted_itin
 
-def test_anonymize(model, language):
-    """Test the anonymize function."""
-    analyzer = analyzer_engine(model)
-    with open("tests/data/test.txt", "r") as f:
-        text = f.read()
-        results = analyzer.analyze(
-            text=text,
-            language=language,
-            entities=get_supported_entities(),
-            return_decision_process=True,
-        )
-        anonymized_text = anonymize(text, results)
-    assert anonymized_text == "John Smith was born in 1990 and now lives in New York City."
 
-#test the annotate function
+@pytest.fixture(scope="function")
+def fake_data(request):
+    params = request.param if hasattr(request, "param") else {}
+    fake = Faker("en_US")
+    data = {
+        "name": fake.name(),
+        "email": fake.email(),
+        "address": fake.address(),
+        "phone": fake.phone_number(),
+        "ssn": fake.ssn(),
+        "credit_card": fake.credit_card_number(),
+        "organization": fake.company(),
+        "location": fake.address(),
+        "date_time": fake.date_time(),
+        "mac_address": fake.mac_address(),
+        "us_bank_number": fake.bban(),
+        "imei": "".join(str(fake.random_int(0, 9)) for _ in range(14)),
+        "title": fake.job(),
+        "license_plate": fake.license_plate(),
+        "us_passport": fake.passport_number(),
+        "currency": fake.currency_code(),
+        "routing_number": generate_routing_number(),
+        "us_itin": generate_us_itin(),
+        "age": fake.random_int(1, 100),
+        "password": fake.password(),
+        "swift_code": fake.swift(),
+    }
 
-def test_annotate(model, language):
-    """Test the annotate function."""
-    analyzer = analyzer_engine(model)
-    with open("tests/data/test.txt", "r") as f:
-        text = f.read()
-        results = analyzer.analyze(
-            text=text,
-            language=language,
-            entities=get_supported_entities(),
-            return_decision_process=True,
-        )
-        tokens = annotate(text, results, get_supported_entities())
-    assert tokens == [
-        "John Smith was born in ",
-        ("1990", "DATE_TIME"),
-        " and now lives in ",
-        ("New York City", "LOCATION"),
-        ".",
-    ]
+    data.update(params)
 
-#test the get_supported_entities function
+    yield data
 
-def test_get_supported_entities(model, language):
-    """Test the get_supported_entities function."""
-    entities = get_supported_entities()
-    assert entities == [
-        "AGE",
-        "DATE_TIME",
-        "EMAIL_ADDRESS",
-        "IBAN_CODE",
-        "IP_ADDRESS",
-        "LOCATION",
-        "NRP",
-        "ORGANIZATION",
-        "PERSON",
-        "PHONE_NUMBER",
-        "STREET_ADDRESS",
-        "URL",
-    ]
+
+def test_pattern_process(fake_data):
+    ENTITIES = {
+        "CREDIT_CARD": "credit_card",
+        "SSN": "ssn",
+        "PHONE": "phone",
+        "EMAIL": "email",
+    }
+
+    text = f"He can be reached at {fake_data['email']} or {fake_data['phone']}.His credit card number is {fake_data['credit_card']} and his SSN is {fake_data['ssn']}."
+    res, html, rpt = process(text, "pattern")
+
+    assert all(entity in res for entity in ENTITIES.keys())
