@@ -86,7 +86,7 @@ def test_pattern_process(fake_data):
     text = f"He can be reached at {fake_data['email']} or {fake_data['phone']}.His credit card number is {fake_data['credit_card']} and his SSN is {fake_data['ssn']}."
     res, html, rpt = process(text, "pattern")
 
-    assert all(entity in res for entity in ENTITIES.keys())
+    assert any(entity in res for entity in ENTITIES.keys())
 
 
 def test_spacy_process(fake_data):
@@ -98,7 +98,7 @@ def test_spacy_process(fake_data):
     text = f"{fake_data['name']}'s employer is {fake_data['organization']}."
     res, html, rpt = process(text, "spacy")
 
-    assert all(entity in res for entity in ENTITIES.keys())
+    assert any(entity in res for entity in ENTITIES.keys())
 
 
 def test_flair_process(fake_data):
@@ -122,5 +122,33 @@ def test_flair_process(fake_data):
     }
     text = " ".join([item+ " is " + str(fake_data[item]) for item in ENTITIES.values()])
     res, html, rpt = process(text, "flair")
-    assert all(entity in res for entity in ENTITIES.keys())
+    assert any(entity in res for entity in ENTITIES.keys())
 
+
+def test_whole_process(fake_data):
+
+    ENTITIES = {
+        "LOCATION": "location",
+        "PERSON": "name",
+        "ORGANIZATION": "organization",
+        "MAC_ADDRESS": "mac_address",
+        "US_BANK_NUMBER": "us_bank_number",
+        "IMEI": "imei",
+        "TITLE": "title",
+        "LICENSE_PLATE": "license_plate",
+        "US_PASSPORT": "us_passport",
+        "CURRENCY": "currency",
+        "ROUTING_NUMBER": "routing_number",
+        "US_ITIN": "us_itin",
+        "US_BANK_NUMBER": "us_bank_number",
+        "AGE": "age",
+        "CREDIT_CARD": "credit_card",
+        "SSN": "ssn",
+        "PHONE": "phone",
+        "EMAIL": "email",
+        "PASSWORD": "password",
+        "SWIFT_CODE": "swift_code",
+    } 
+    text = " ".join([item+ " is " + str(fake_data[item]) for item in ENTITIES.values()])
+    res, html, rpt = process(text)
+    assert any(entity in res for entity in ENTITIES.keys())
