@@ -533,42 +533,48 @@ def process(text: str, model: AnalyzerEngine):
 def pii_recognize(
     context: mlrun.MLClientCtx,
     model: str,
-    artifact_input_path: str,
-    output_key: str,
+    input_path: str,
+    output_path: str,
+    output_suffix: str,
     html_key: str,
     rpt_key: str,
-) -> None:
+) -> str:
     """
     Recognize PII in text.
     :param context: The MLRun context.
     :param model: The model to use. Can be "spacy", "flair", "pattern" or "whole".
-    :param artifact_input_path: The input path to the artifact.
-    :param output_key: The surfix of output key for the artifact.
+    :param input_path: The input path to the artifact.
+    :param output_path: The output path to store the anonymized text.
+    :param output_suffix: The surfix of output key for the anonymized text. for example if the input file is pii.txt, the output key will be pii_anonymized.txt.
     :param html_key: The html key for the artifact.
-    :param rpt_key: The surfix of the report key for the artifact.
-    :returns: None
+    :param rpt_key: The report key for the artifact.
+    :returns: output_path
     """
+    if not output_path:
+        output_path = input_path + "/output/"
     analyzer = analyzer_engine(model)
-    txt_file_paths, txt_file_names = get_text_files(artifact_input_path)
+    txt_file_paths, txt_file_names = get_text_files(input_path)
     html_index = "<html><head><title>Highlighted Pii Entities</title></head><body><h1>Highlighted Pii Entities</h1><ul>"
     html_content = ""
+    rpt_json = {}
     for file_path, file_name in zip(txt_file_paths, txt_file_names):
         text = mlrun.get_dataitem(file_path).get().decode("utf-8")
         anonymized_text, html_str, stats = process(text, analyzer)
         html_index += f'<li><a href="#{file_name}">{file_name}</a></li>'
         html_content += f'<h2 id="{file_name}">{file_name}</h2>{html_str}'
-        arti_ano_text = Artifact(body=anonymized_text, format="txt", key=file_name + f"_{output_key}")
+        with open(f"{output_path}/{file_name}_{output_suffix}.txt", "w") as f:
+            f.write(anonymized_text)
         rpt_json = {file_name: stats}
-        arti_rpt = Artifact(
-            body=json.dumps(rpt_json, cls=CustomEncoder), format="json", key=file_name + f"_{rpt_key}"
-        )
-        context.log_artifact(arti_ano_text)
-        context.log_artifact(arti_rpt)
 
     html_index += '</ul>'
     html_res = f'{html_index}{html_content}</body></html>'
-    arti_html = Artifact(body=html_res, format="html", key=html_key)
+    arti_html = Artifact(body=html_res, format="html", key=html_key) 
+    arti_rpt = Artifact(
+            body=json.dumps(rpt_json, cls=CustomEncoder), format="json", key=rpt_key
+        )
+    context.log_artifact(arti_rpt)
     context.log_artifact(arti_html)
+    return output_path
 
 def get_text_files(path):
     """
