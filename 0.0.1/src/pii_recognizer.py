@@ -1,3 +1,6 @@
+import mlrun
+from mlrun.datastore import DataItem
+from mlrun.artifacts import Artifact
 from presidio_anonymizer import AnonymizerEngine
 from annotated_text.util import get_annotated_html
 from json import JSONEncoder
@@ -525,3 +528,36 @@ def process(text: str, model: str = "whole"):
     stats = results
 
     return anonymized_text, html_str, stats
+
+
+def pii_recognize(
+    context: mlrun.MLClientCtx,
+    model: str,
+    artifact_input_path: str,
+    output_key: str,
+    html_key: str,
+    rpt_key: str,
+) -> None:
+    """
+    Recognize PII in text.
+    :param context: The MLRun context.
+    :param model: The model to use. Can be "spacy", "flair", "pattern" or "whole".
+    :param artifact_input_path: The input path to the artifact.
+    :param output_key: The output key for the artifact.
+    :param html_key: The html key for the artifact.
+    :param rpt_key: The report key for the artifact.
+    :returns: None
+    """
+
+    text = mlrun.get_dataitem(artifact_input_path).get().decode("utf-8")
+    anonymized_text, html_str, stats = process(text, model)
+
+    arti_ano_text = Artifact(body=anonymized_text, format="txt", key=output_key)
+    arti_html = Artifact(body=html_str, format="html", key=html_key)
+    arti_rpt = Artifact(
+        body=json.dumps(stats, cls=CustomEncoder), format="json", key=rpt_key
+    )
+
+    context.log_artifact(arti_ano_text)
+    context.log_artifact(arti_html)
+    context.log_artifact(arti_rpt)
