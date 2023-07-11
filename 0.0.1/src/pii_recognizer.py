@@ -521,9 +521,7 @@ def process(text: str, model: AnalyzerEngine):
     html = get_annotated_html(*annotated_tokens)
     backslash_char = "\\"
 
-    html_str = (
-        f"<p>{html.replace('{backslash_char}n', '<br>')}</p>"
-    )
+    html_str = f"<p>{html.replace('{backslash_char}n', '<br>')}</p>"
 
     stats = results
 
@@ -564,17 +562,18 @@ def pii_recognize(
         html_content += f'<h2 id="{file_name}">{file_name}</h2>{html_str}'
         with open(f"{output_path}/{file_name}_{output_suffix}.txt", "w") as f:
             f.write(anonymized_text)
-        rpt_json = {file_name: stats}
+        rpt_json[file_name] = stats
 
-    html_index += '</ul>'
-    html_res = f'{html_index}{html_content}</body></html>'
-    arti_html = Artifact(body=html_res, format="html", key=html_key) 
+    html_index += "</ul>"
+    html_res = f"{html_index}{html_content}</body></html>"
+    arti_html = Artifact(body=html_res, format="html", key=html_key)
     arti_rpt = Artifact(
-            body=json.dumps(rpt_json, cls=CustomEncoder), format="json", key=rpt_key
-        )
+        body=json.dumps(rpt_json, cls=CustomEncoder), format="json", key=rpt_key
+    )
     context.log_artifact(arti_rpt)
     context.log_artifact(arti_html)
     return output_path
+
 
 def get_text_files(path):
     """
@@ -589,5 +588,5 @@ def get_text_files(path):
             if file.endswith(".txt"):
                 txt_file_lst.append(os.path.join(root, file))
                 txt_file_names.append(file[:-4])
+        break
     return txt_file_lst, txt_file_names
-
