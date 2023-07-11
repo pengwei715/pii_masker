@@ -501,14 +501,14 @@ class CustomEncoder(JSONEncoder):
         return o.__dict__
 
 
-def process(text: str, model: str = "whole"):
+def process(text: str, model: AnalyzerEngine):
     """
     Process the text of str using the model.
     :param txt: Text to process
     :param model: Model to use for processing
     :returns: The anonymized text, the html string and the stats report.
     """
-    analyzer = analyzer_engine(model)
+    analyzer = model
     results = analyzer.analyze(
         text=text,
         language="en",
@@ -522,7 +522,7 @@ def process(text: str, model: str = "whole"):
     backslash_char = "\\"
 
     html_str = (
-        f"<html><body><p>{html.replace('{backslash_char}n', '<br>')}</p></body></html>"
+        f"<p>{html.replace('{backslash_char}n', '<br>')}</p>"
     )
 
     stats = results
@@ -543,21 +543,45 @@ def pii_recognize(
     :param context: The MLRun context.
     :param model: The model to use. Can be "spacy", "flair", "pattern" or "whole".
     :param artifact_input_path: The input path to the artifact.
-    :param output_key: The output key for the artifact.
+    :param output_key: The surfix of output key for the artifact.
     :param html_key: The html key for the artifact.
-    :param rpt_key: The report key for the artifact.
+    :param rpt_key: The surfix of the report key for the artifact.
     :returns: None
     """
+    analyzer = analyzer_engine(model)
+    txt_file_paths, txt_file_names = get_text_files(artifact_input_path)
+    html_index = "<html><head><title>Highlighted Pii Entities</title></head><body><h1>Highlighted Pii Entities</h1><ul>"
+    html_content = ""
+    for file_path, file_name in zip(txt_file_paths, txt_file_names):
+        text = mlrun.get_dataitem(file_path).get().decode("utf-8")
+        anonymized_text, html_str, stats = process(text, analyzer)
+        html_index += f'<li><a href="#{file_name}">{file_name}</a></li>'
+        html_content += f'<h2 id="{file_name}">{file_name}</h2>{html_str}'
+        arti_ano_text = Artifact(body=anonymized_text, format="txt", key=file_name + f"_{output_key}")
+        rpt_json = {file_name: stats}
+        arti_rpt = Artifact(
+            body=json.dumps(rpt_json, cls=CustomEncoder), format="json", key=file_name + f"_{rpt_key}"
+        )
+        context.log_artifact(arti_ano_text)
+        context.log_artifact(arti_rpt)
 
-    text = mlrun.get_dataitem(artifact_input_path).get().decode("utf-8")
-    anonymized_text, html_str, stats = process(text, model)
-
-    arti_ano_text = Artifact(body=anonymized_text, format="txt", key=output_key)
-    arti_html = Artifact(body=html_str, format="html", key=html_key)
-    arti_rpt = Artifact(
-        body=json.dumps(stats, cls=CustomEncoder), format="json", key=rpt_key
-    )
-
-    context.log_artifact(arti_ano_text)
+    html_index += '</ul>'
+    html_res = f'{html_index}{html_content}</body></html>'
+    arti_html = Artifact(body=html_res, format="html", key=html_key)
     context.log_artifact(arti_html)
-    context.log_artifact(arti_rpt)
+
+def get_text_files(path):
+    """
+    Get a list of text file paths from a given path.
+    :param path: The path to walk through.
+    :returns: A list of text file paths and list of file names.
+    """
+    txt_file_lst = []
+    txt_file_names = []
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            if file.endswith(".txt"):
+                txt_file_lst.append(os.path.join(root, file))
+                txt_file_names.append(file[:-4])
+    return txt_file_lst, txt_file_names
+
