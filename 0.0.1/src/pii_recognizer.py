@@ -530,23 +530,22 @@ def process(text: str, model: AnalyzerEngine):
 
 def pii_recognize(
     context: mlrun.MLClientCtx,
-    model: str,
     input_path: str,
     output_path: str,
     output_suffix: str,
     html_key: str,
-    rpt_key: str,
+    model: str = "whole",
 ) -> str:
     """
     Recognize PII in text.
     :param context: The MLRun context.
-    :param model: The model to use. Can be "spacy", "flair", "pattern" or "whole".
     :param input_path: The input path to the artifact.
     :param output_path: The output path to store the anonymized text.
     :param output_suffix: The surfix of output key for the anonymized text. for example if the input file is pii.txt, the output key will be pii_anonymized.txt.
     :param html_key: The html key for the artifact.
-    :param rpt_key: The report key for the artifact.
+    :param model: The model to use. Can be "spacy", "flair", "pattern" or "whole".
     :returns: output_path
+
     """
     if not output_path:
         output_path = input_path + "/output/"
