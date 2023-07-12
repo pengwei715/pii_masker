@@ -562,17 +562,16 @@ def pii_recognize(
         html_content += f'<h2 id="{file_name}">{file_name}</h2>{html_str}'
         with open(f"{output_path}/{file_name}_{output_suffix}.txt", "w") as f:
             f.write(anonymized_text)
-        rpt_json[file_name] = stats
-
+        new_stats = []
+        for item in stats:
+            item.analysis_explanation = item.analysis_explanation.to_dict()
+            new_stats.append(item.to_dict())
+        rpt_json[file_name] = new_stats
     html_index += "</ul>"
     html_res = f"{html_index}{html_content}</body></html>"
     arti_html = Artifact(body=html_res, format="html", key=html_key)
-    arti_rpt = Artifact(
-        body=json.dumps(rpt_json, cls=CustomEncoder), format="json", key=rpt_key
-    )
-    context.log_artifact(arti_rpt)
     context.log_artifact(arti_html)
-    return output_path
+    return rpt_json, output_path
 
 
 def get_text_files(path):
