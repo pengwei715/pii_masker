@@ -83,8 +83,9 @@ def test_pattern_process(fake_data):
         "EMAIL": "email",
     }
 
+    analyzer = analyzer_engine("partern")
     text = f"He can be reached at {fake_data['email']} or {fake_data['phone']}.His credit card number is {fake_data['credit_card']} and his SSN is {fake_data['ssn']}."
-    res, html, rpt = process(text, "pattern")
+    res, html, rpt = process(text, analyzer)
 
     assert any(entity in res for entity in ENTITIES.keys())
 
@@ -95,8 +96,9 @@ def test_spacy_process(fake_data):
         "ORGANIZATION": "organization",
     }
 
+    analyzer = analyzer_engine("spacy")
     text = f"{fake_data['name']}'s employer is {fake_data['organization']}."
-    res, html, rpt = process(text, "spacy")
+    res, html, rpt = process(text, analyzer)
 
     assert any(entity in res for entity in ENTITIES.keys())
 
@@ -120,13 +122,16 @@ def test_flair_process(fake_data):
         "PASSWORD": "password",
         "SWIFT_CODE": "swift_code",
     }
-    text = " ".join([item+ " is " + str(fake_data[item]) for item in ENTITIES.values()])
-    res, html, rpt = process(text, "flair")
+
+    analyzer = analyzer_engine("flair")
+    text = " ".join(
+        [item + " is " + str(fake_data[item]) for item in ENTITIES.values()]
+    )
+    res, html, rpt = process(text, analyzer)
     assert any(entity in res for entity in ENTITIES.keys())
 
 
 def test_whole_process(fake_data):
-
     ENTITIES = {
         "LOCATION": "location",
         "PERSON": "name",
@@ -148,7 +153,10 @@ def test_whole_process(fake_data):
         "EMAIL": "email",
         "PASSWORD": "password",
         "SWIFT_CODE": "swift_code",
-    } 
-    text = " ".join([item+ " is " + str(fake_data[item]) for item in ENTITIES.values()])
-    res, html, rpt = process(text)
+    }
+    text = " ".join(
+        [item + " is " + str(fake_data[item]) for item in ENTITIES.values()]
+    )
+    analyzer = analyzer_engine("whole")
+    res, html, rpt = process(text, analyzer)
     assert any(entity in res for entity in ENTITIES.keys())
